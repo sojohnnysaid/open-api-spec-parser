@@ -269,8 +269,10 @@ def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patter
     if components:
         output["components"] = components
 
-    # ── Remove additionalProperties: true (some validators reject it) ──
+    # ── Remove properties that strict validators reject ──
     strip_additional_properties(output)
+    strip_nullable(output)
+    fix_empty_object_schemas(output)
 
     # ── Sanitize example values ──
     # GitHub's spec has many example values with embedded quotes like
@@ -302,6 +304,57 @@ def strip_additional_properties(obj):
     elif isinstance(obj, list):
         for item in obj:
             strip_additional_properties(item)
+
+
+def strip_nullable(obj):
+    """Recursively remove nullable: true entries.
+
+    Some validators (e.g. Glean) don't support nullable on object schemas.
+    Removing it is safe — nullable fields are effectively optional.
+    """
+    if isinstance(obj, dict):
+        obj.pop("nullable", None)
+        for val in obj.values():
+            strip_nullable(val)
+    elif isinstance(obj, list):
+        for item in obj:
+            strip_nullable(item)
+
+
+def fix_empty_object_schemas(obj):
+    """Remove object-type properties that have no defined properties.
+
+    Schemas like custom_properties: {type: object} with no properties
+    cause strict validators to fail with 'schema properties cannot be null'.
+    We remove these empty object fields from their parent's properties and
+    required lists.
+    """
+    if isinstance(obj, dict):
+        # If this dict has 'properties', check each for empty objects
+        if "properties" in obj and isinstance(obj["properties"], dict):
+            empty_keys = []
+            for prop_name, prop_val in obj["properties"].items():
+                if (isinstance(prop_val, dict)
+                        and prop_val.get("type") == "object"
+                        and "properties" not in prop_val
+                        and "$ref" not in prop_val
+                        and "allOf" not in prop_val
+                        and "oneOf" not in prop_val
+                        and "anyOf" not in prop_val
+                        and "items" not in prop_val):
+                    empty_keys.append(prop_name)
+            for key in empty_keys:
+                del obj["properties"][key]
+                # Also remove from required if present
+                if "required" in obj and isinstance(obj["required"], list):
+                    if key in obj["required"]:
+                        obj["required"].remove(key)
+        # Recurse
+        for val in obj.values():
+            fix_empty_object_schemas(val)
+    elif isinstance(obj, list):
+        for item in obj:
+            fix_empty_object_schemas(item)
 
 
 def sanitize_examples(obj):
