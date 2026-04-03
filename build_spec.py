@@ -166,7 +166,7 @@ def _glob_match(path, pattern):
     return re.match(regex, path, re.DOTALL) is not None
 
 
-def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patterns=None):
+def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patterns=None, strip_examples=False):
     """Build a new spec containing only paths matching selected tags and path filters."""
     selected = set(selected_tags)
     exclude_patterns = exclude_patterns or []
@@ -275,6 +275,13 @@ def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patter
     # format validation. Strip the wrapping double quotes.
     sanitize_examples(output)
 
+    # ── Strip response examples if requested ──
+    # GitHub's response examples are often incomplete (missing required
+    # fields like has_discussions) and add thousands of lines of bloat.
+    if strip_examples:
+        print(f"  Stripping response examples...")
+        strip_response_examples(output)
+
     return output
 
 
@@ -294,6 +301,39 @@ def sanitize_examples(obj):
     elif isinstance(obj, list):
         for item in obj:
             sanitize_examples(item)
+
+
+def strip_response_examples(spec):
+    """Remove response-level examples that bloat the spec and often have
+    missing required fields.
+
+    Removes:
+    - 'examples' keys from response media type objects (the big JSON blobs)
+    - The entire components/examples section
+    - 'example' keys from response media type objects (single example blobs)
+
+    Preserves:
+    - Per-property 'example' values in schemas (e.g. example: true)
+    """
+    # Strip from paths -> responses -> content -> examples
+    for path_val in spec.get("paths", {}).values():
+        if not isinstance(path_val, dict):
+            continue
+        for method in ("get", "post", "put", "patch", "delete", "head", "options", "parameters"):
+            op = path_val.get(method)
+            if not isinstance(op, dict):
+                continue
+            for resp_val in op.get("responses", {}).values():
+                if not isinstance(resp_val, dict):
+                    continue
+                for media in resp_val.get("content", {}).values():
+                    if isinstance(media, dict):
+                        media.pop("examples", None)
+                        media.pop("example", None)
+
+    # Strip components/examples entirely
+    if "components" in spec and isinstance(spec["components"], dict):
+        spec["components"].pop("examples", None)
 
 
 def parse_tags(args):
@@ -349,6 +389,11 @@ def main():
         "--exclude-paths-file",
         help="File with exclude patterns (one per line, # for comments)"
     )
+    parser.add_argument(
+        "--strip-examples",
+        action="store_true",
+        help="Remove response examples (they bloat the spec and often have validation errors)"
+    )
     args = parser.parse_args()
 
     tags = parse_tags(args)
@@ -377,7 +422,7 @@ def main():
 
     spec = chunked_yaml_parse(args.spec_file)
 
-    custom_spec = build_custom_spec(spec, tags, exclude_patterns, include_patterns)
+    custom_spec = build_custom_spec(spec, tags, exclude_patterns, include_patterns, args.strip_examples)
 
     path_count = len(custom_spec.get("paths", {}))
     op_count = sum(
