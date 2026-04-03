@@ -4,15 +4,22 @@ extract_tasks.py - Stream-parse a large GitHub OpenAPI YAML spec and extract
 all unique task types (tags) with their descriptions and associated endpoints.
 
 Outputs a markdown "menu" file you can browse to pick the task types you need.
+Supports path-level and tag-level filtering so the menu reflects only what
+you'd actually include in a custom spec.
 
 Usage:
     python3 extract_tasks.py <spec_file> [-o output_file]
+    python3 extract_tasks.py <spec_file> --tags repos,issues,pulls
+    python3 extract_tasks.py <spec_file> --exclude-paths '*/hosted-runners/*'
 
-Example:
+Examples:
     python3 extract_tasks.py github-api-spec.yaml -o task_menu.md
+    python3 extract_tasks.py github-api-spec.yaml --tags repos,actions,issues \\
+        --exclude-paths '*/hosted-runners/*' '*/cache/*' '*/rulesets/*'
 """
 
 import argparse
+import fnmatch
 import sys
 import re
 from collections import defaultdict
@@ -221,6 +228,48 @@ def build_menu(tag_definitions, path_operations, output_path):
     return all_tags
 
 
+def _glob_match(path, pattern):
+    """fnmatch but with * also matching /."""
+    regex = fnmatch.translate(pattern)
+    return re.match(regex, path, re.DOTALL) is not None
+
+
+def _path_matches_any(path_key, patterns):
+    """Check if a path matches any of the given glob patterns."""
+    for pattern in patterns:
+        if _glob_match(path_key, pattern):
+            return True
+        if not pattern.startswith("/") and _glob_match(path_key, "*/" + pattern):
+            return True
+        if not pattern.startswith("/") and _glob_match(path_key, "*/" + pattern + "/*"):
+            return True
+    return False
+
+
+def filter_path_operations(path_operations, exclude_patterns=None, include_patterns=None):
+    """Filter path operations by glob patterns on the path string."""
+    if not exclude_patterns and not include_patterns:
+        return path_operations
+
+    filtered = defaultdict(list)
+    excluded_count = 0
+    for tag, ops in path_operations.items():
+        for method, path, summary, op_id in ops:
+            skip = False
+            if exclude_patterns and _path_matches_any(path, exclude_patterns):
+                skip = True
+            if not skip and include_patterns and not _path_matches_any(path, include_patterns):
+                skip = True
+            if skip:
+                excluded_count += 1
+            else:
+                filtered[tag].append((method, path, summary, op_id))
+
+    if excluded_count:
+        print(f"  Path filter excluded {excluded_count} endpoints")
+    return filtered
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Extract task types from a GitHub OpenAPI spec into a browsable menu."
@@ -231,12 +280,58 @@ def main():
         default="task_menu.md",
         help="Output markdown file (default: task_menu.md)"
     )
+    parser.add_argument(
+        "--exclude-paths",
+        nargs="+",
+        default=[],
+        help="Glob patterns for paths to exclude (e.g. '**/hosted-runners/**')"
+    )
+    parser.add_argument(
+        "--include-paths",
+        nargs="+",
+        default=[],
+        help="Glob patterns for paths to include (only matching paths kept)"
+    )
+    parser.add_argument(
+        "--exclude-paths-file",
+        help="File with exclude patterns (one per line, # for comments)"
+    )
+    parser.add_argument(
+        "--tags",
+        nargs="+",
+        default=[],
+        help="Only show these tags in the menu (comma-separated or repeated)"
+    )
     args = parser.parse_args()
+
+    # Collect path filter patterns
+    exclude_patterns = list(args.exclude_paths)
+    if args.exclude_paths_file:
+        with open(args.exclude_paths_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    exclude_patterns.append(line)
+    include_patterns = list(args.include_paths)
+
+    # Collect tag filters
+    selected_tags = set()
+    for t in args.tags:
+        selected_tags.update(x.strip() for x in t.split(",") if x.strip())
 
     print(f"Scanning {args.spec_file} ...")
     tag_defs, path_ops = stream_extract_tags_and_paths(args.spec_file)
     print(f"  Found {len(tag_defs)} tag definitions")
     print(f"  Found {len(path_ops)} tags with endpoints")
+
+    # Apply path filters
+    path_ops = filter_path_operations(path_ops, exclude_patterns, include_patterns)
+
+    # Apply tag filter
+    if selected_tags:
+        tag_defs = {k: v for k, v in tag_defs.items() if k in selected_tags}
+        path_ops = {k: v for k, v in path_ops.items() if k in selected_tags}
+        print(f"  Filtered to {len(selected_tags)} selected tags")
 
     all_tags = build_menu(tag_defs, path_ops, args.output)
     print(f"\nMenu written to: {args.output}")

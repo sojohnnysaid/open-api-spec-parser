@@ -65,10 +65,17 @@ This streams through the spec line-by-line (no full YAML parse, so it's fast eve
 
 Each row is a "task type" (an OpenAPI tag). The menu also includes a detailed section listing every endpoint per tag, and a copy-paste-ready comma-separated list of all tags at the bottom.
 
-You can also specify a custom output path:
+You can also specify a custom output path, filter to specific tags, and exclude paths:
 
 ```bash
 python3 extract_tasks.py api.github.com.yaml -o my_menu.md
+
+# Only show specific tags
+python3 extract_tasks.py api.github.com.yaml --tags repos,actions,issues,pulls
+
+# Exclude enterprise/admin endpoints from the menu
+python3 extract_tasks.py api.github.com.yaml --tags repos,actions \
+    --exclude-paths '*/hosted-runners/*' '*/cache/*' '*/rulesets/*'
 ```
 
 ## Step 2 — Build Your Custom Spec
@@ -109,6 +116,39 @@ EOF
 
 python3 build_spec.py spec.yaml --tags-file my_tags.txt -o my_spec.yaml
 ```
+
+### Path-level filtering
+
+Tags like `actions` (184 endpoints) and `repos` (201 endpoints) include a lot of enterprise/admin endpoints you probably don't need. Use `--exclude-paths` to trim them:
+
+```bash
+# Exclude runner management, cache settings, and rulesets
+python3 build_spec.py spec.yaml -t actions,repos \
+    --exclude-paths '*/hosted-runners/*' '*/cache/*' '*/rulesets/*' \
+        '*/self-hosted-runners/*' '*/runner-groups/*'
+
+# Only include repo-level paths (skip org/enterprise admin)
+python3 build_spec.py spec.yaml -t actions \
+    --include-paths '/repos/*'
+
+# Load exclude patterns from a file
+cat > exclude.txt << EOF
+# Enterprise/admin bloat
+*/hosted-runners/*
+*/self-hosted-runners/*
+*/runner-groups/*
+*/cache/*
+*/rulesets/*
+*/pages/*
+*/attestations/*
+*/autolinks/*
+EOF
+
+python3 build_spec.py spec.yaml -t repos,actions,issues,pulls \
+    --exclude-paths-file exclude.txt -o my_spec.yaml
+```
+
+Both `--exclude-paths` and `--include-paths` use glob patterns matched against the API path (e.g. `/repos/{owner}/{repo}/actions/workflows`). Exclude is applied first, then include.
 
 ## Example End-to-End
 

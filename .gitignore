@@ -3,7 +3,7 @@
 
 # Large spec files (user-provided input)
 *.yaml
-!custom_spec.yaml
+!glean-github-spec.yaml
 
 # Python
 __pycache__/

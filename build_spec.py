@@ -3,21 +3,26 @@
 build_spec.py - Extract selected task types from a large GitHub OpenAPI YAML
 spec and produce a minimal custom spec containing only those endpoints.
 
-Uses streaming to read the source file and only fully parses the sections
-that match your selected tags.
+Supports both tag-level and path-level filtering so you can exclude
+enterprise/admin endpoints you don't need.
 
 Usage:
     python3 build_spec.py <spec_file> -t tag1,tag2,tag3 [-o output_file]
     python3 build_spec.py <spec_file> -t tag1 -t tag2 [-o output_file]
     python3 build_spec.py <spec_file> --tags-file my_tags.txt [-o output_file]
+    python3 build_spec.py <spec_file> -t actions --exclude-paths '*/hosted-runners/*' '*/cache/*'
 
 Examples:
     python3 build_spec.py github-api-spec.yaml -t agent-tasks,repos -o my_spec.yaml
     python3 build_spec.py github-api-spec.yaml -t gists -t issues -o my_spec.yaml
-    echo "agent-tasks,apps" > tags.txt && python3 build_spec.py github-api-spec.yaml --tags-file tags.txt
+    python3 build_spec.py github-api-spec.yaml -t actions,repos \\
+        --exclude-paths '*/hosted-runners/*' '*/rulesets/*' '*/cache/*'
+    python3 build_spec.py github-api-spec.yaml -t repos \\
+        --exclude-paths-file exclude_patterns.txt
 """
 
 import argparse
+import fnmatch
 import sys
 import yaml
 import re
@@ -127,17 +132,61 @@ def collect_all_refs_deep(spec, initial_refs):
     return all_refs
 
 
-def build_custom_spec(spec, selected_tags):
-    """Build a new spec containing only paths matching selected tags."""
+def path_matches_any(path_key, patterns):
+    """Check if a path matches any of the given glob patterns.
+
+    Supports two match modes:
+    - Pattern starting with '/' is anchored and matched against the full path.
+    - Pattern without leading '/' matches if any substring of the path between
+      slashes contains the pattern segments (substring/component match).
+
+    Uses fnmatch with a flag to make '*' match '/' for convenience.
+    """
+    for pattern in patterns:
+        # Try direct fnmatch first (with * matching /)
+        if _glob_match(path_key, pattern):
+            return True
+        # Also check if the pattern appears as a substring match on path segments
+        if not pattern.startswith("/") and _glob_match(path_key, "*/" + pattern) :
+            return True
+        if not pattern.startswith("/") and _glob_match(path_key, "*/" + pattern + "/*"):
+            return True
+    return False
+
+
+def _glob_match(path, pattern):
+    """fnmatch but with * also matching /."""
+    # Convert * to match everything including /
+    # We do this by translating to regex ourselves
+    regex = fnmatch.translate(pattern)
+    # fnmatch.translate turns * into [^/]* equivalent via (?s:.*),
+    # but we want * to match / too, which (?s:.*) already does.
+    # However fnmatch uses re.IGNORECASE on some platforms, so be explicit.
+    return re.match(regex, path, re.DOTALL) is not None
+
+
+def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patterns=None):
+    """Build a new spec containing only paths matching selected tags and path filters."""
     selected = set(selected_tags)
+    exclude_patterns = exclude_patterns or []
+    include_patterns = include_patterns or []
 
     # ── Filter paths ──
     filtered_paths = OrderedDict()
     all_refs = set()
+    excluded_count = 0
 
     paths = spec.get("paths", {})
     for path_key, path_val in paths.items():
         if not isinstance(path_val, dict):
+            continue
+
+        # Path-level filtering: exclude first, then include
+        if exclude_patterns and path_matches_any(path_key, exclude_patterns):
+            excluded_count += 1
+            continue
+        if include_patterns and not path_matches_any(path_key, include_patterns):
+            excluded_count += 1
             continue
 
         matching_methods = OrderedDict()
@@ -161,6 +210,9 @@ def build_custom_spec(spec, selected_tags):
 
             # Collect refs from these operations
             all_refs |= collect_refs(matching_methods)
+
+    if excluded_count:
+        print(f"  Path filter excluded {excluded_count} paths")
 
     if not filtered_paths:
         print(f"\n  WARNING: No endpoints found for tags: {', '.join(selected_tags)}")
@@ -256,6 +308,22 @@ def main():
         default="custom_spec.yaml",
         help="Output YAML file (default: custom_spec.yaml)"
     )
+    parser.add_argument(
+        "--exclude-paths",
+        nargs="+",
+        default=[],
+        help="Glob patterns for paths to exclude (e.g. '**/hosted-runners/**' '**/rulesets/**')"
+    )
+    parser.add_argument(
+        "--include-paths",
+        nargs="+",
+        default=[],
+        help="Glob patterns for paths to include (only matching paths kept)"
+    )
+    parser.add_argument(
+        "--exclude-paths-file",
+        help="File with exclude patterns (one per line, # for comments)"
+    )
     args = parser.parse_args()
 
     tags = parse_tags(args)
@@ -264,12 +332,27 @@ def main():
         print("Run extract_tasks.py first to see available task types.")
         sys.exit(1)
 
+    # Collect path filter patterns
+    exclude_patterns = list(args.exclude_paths)
+    if args.exclude_paths_file:
+        with open(args.exclude_paths_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    exclude_patterns.append(line)
+
+    include_patterns = list(args.include_paths)
+
     print(f"Selected task types: {', '.join(tags)}")
+    if exclude_patterns:
+        print(f"Excluding paths: {', '.join(exclude_patterns)}")
+    if include_patterns:
+        print(f"Including only paths: {', '.join(include_patterns)}")
     print(f"Source: {args.spec_file}")
 
     spec = chunked_yaml_parse(args.spec_file)
 
-    custom_spec = build_custom_spec(spec, tags)
+    custom_spec = build_custom_spec(spec, tags, exclude_patterns, include_patterns)
 
     path_count = len(custom_spec.get("paths", {}))
     op_count = sum(
