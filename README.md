@@ -150,6 +150,47 @@ python3 build_spec.py spec.yaml -t repos,actions,issues,pulls \
 
 Both `--exclude-paths` and `--include-paths` use glob patterns matched against the API path (e.g. `/repos/{owner}/{repo}/actions/workflows`). Exclude is applied first, then include.
 
+## Why Filter? The Noise Problem
+
+GitHub's full OpenAPI spec contains **900+ endpoints across 46 tags**. The vast majority are enterprise administration, org-level policy management, and niche features that an AI agent (or most developers) will never touch. Without filtering, you're feeding thousands of lines of irrelevant schema into your LLM context window or code generator.
+
+Here's what the noise looks like in practice:
+
+| Category | Examples | Why it's noise |
+|----------|----------|----------------|
+| **Enterprise/org admin** | Runner management, cache retention policies, fork PR approval settings, OIDC customization, workflow permission controls | Infrastructure ops — not something a dev or AI agent configuring a repo needs |
+| **Self-hosted runners** | Create/delete runners, manage labels, registration tokens, JIT configs | Only relevant if you manage your own CI infrastructure |
+| **Branch protection & rulesets** | Ruleset CRUD, status check contexts, admin enforcement, deployment branch policies | Policy governance — set once by a human, not by an agent writing code |
+| **GitHub Pages** | Pages builds, deployments, health checks, custom domains | Static site hosting — separate concern from repo/code management |
+| **Security & compliance** | Attestations, vulnerability alerts, code scanning, secret scanning, security advisories | Important but not part of a prototyping workflow |
+| **Niche repo features** | Autolinks, deploy keys, import/export, traffic stats, community profile, CODEOWNERS validation | Rarely needed for everyday dev work |
+| **User account management** | GPG keys, SSH signing keys, email settings, social accounts, followers, blocking | Profile administration — not relevant to repo operations |
+| **Activity & notifications** | Event streams, notification threads, feed subscriptions, starring/watching management | Consumption features — an agent creating code doesn't need to manage notifications |
+
+### The included `glean-github-spec.yaml`
+
+This repo ships a pre-built spec (`glean-github-spec.yaml`) tailored for an **AI agent that prototypes web apps**. It was generated using `exclude_defaults.txt` and contains **189 endpoints** across 8 tags:
+
+| Tag | Endpoints | What's included |
+|-----|-----------|-----------------|
+| `repos` | 55 | Repo CRUD, branches, commits, file contents, compare, forks, releases, tags, collaborators |
+| `actions` | 34 | Workflow runs, jobs, logs, artifacts, repo-level secrets and variables |
+| `issues` | 37 | Issue CRUD, comments, labels, assignees, milestones, timeline |
+| `pulls` | 26 | PR CRUD, review comments, reviews, merge, requested reviewers |
+| `reactions` | 15 | Reactions on issues, PRs, comments, and releases |
+| `git` | 13 | Low-level git: blobs, commits, refs (branches), tags, trees |
+| `search` | 6 | Search code, commits, issues, labels, repos, users |
+| `users` | 4 | Get/update authenticated user, look up users by name or ID |
+
+To regenerate it or customize further:
+
+```bash
+python3 build_spec.py api.github.com.yaml \
+    -t repos,actions,issues,pulls,git,search,reactions,users \
+    --exclude-paths-file exclude_defaults.txt \
+    -o glean-github-spec.yaml
+```
+
 ## Example End-to-End
 
 ```bash
