@@ -269,6 +269,9 @@ def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patter
     if components:
         output["components"] = components
 
+    # ── Remove additionalProperties: true (some validators reject it) ──
+    strip_additional_properties(output)
+
     # ── Sanitize example values ──
     # GitHub's spec has many example values with embedded quotes like
     # example: '"2007-10-29T02:42:39.000-07:00"' which fail date-time
@@ -283,6 +286,22 @@ def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patter
         strip_response_examples(output)
 
     return output
+
+
+def strip_additional_properties(obj):
+    """Recursively remove additionalProperties: true entries.
+
+    Some validators (e.g. Glean) reject additionalProperties or require
+    it to be false.
+    """
+    if isinstance(obj, dict):
+        if "additionalProperties" in obj and obj["additionalProperties"] is True:
+            del obj["additionalProperties"]
+        for val in obj.values():
+            strip_additional_properties(val)
+    elif isinstance(obj, list):
+        for item in obj:
+            strip_additional_properties(item)
 
 
 def sanitize_examples(obj):

@@ -259,7 +259,6 @@ paths:
                   type: object
                   description: The custom properties for the new repository. The keys are the custom property names, and the
                     values are the corresponding custom property values.
-                  additionalProperties: true
               required:
               - name
       responses:
@@ -1830,7 +1829,6 @@ paths:
                   type: object
                   description: Input keys and values configured in the workflow file. The maximum number of properties is
                     25. Any default properties configured in the workflow file will be used when `inputs` are omitted.
-                  additionalProperties: true
                   maxProperties: 25
               required:
               - ref
@@ -3490,7 +3488,6 @@ paths:
                   description: JSON payload with extra information about the webhook event that your action or workflow may
                     use. The maximum number of top-level properties is 10. The total size of the JSON payload must be less
                     than 64KB.
-                  additionalProperties: true
                   maxProperties: 10
       responses:
         '204':
@@ -12693,7 +12690,6 @@ components:
           type: object
           description: The custom properties that were defined for the repository. The keys are the custom property names,
             and the values are the corresponding custom property values.
-          additionalProperties: true
       required:
       - archive_url
       - assignees_url
@@ -14487,7 +14483,6 @@ components:
           type: object
           description: The custom properties that were defined for the repository. The keys are the custom property names,
             and the values are the corresponding custom property values.
-          additionalProperties: true
       required:
       - archive_url
       - assignees_url
