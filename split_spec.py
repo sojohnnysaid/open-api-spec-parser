@@ -91,6 +91,40 @@ def collect_all_refs_deep(spec, initial_refs):
     return all_refs
 
 
+def inline_refs(obj, spec, visited=None):
+    """Recursively replace all $ref pointers with the actual content they
+    reference, producing a fully self-contained spec with no $ref or
+    components section needed.
+    """
+    if visited is None:
+        visited = set()
+
+    if isinstance(obj, dict):
+        if "$ref" in obj and isinstance(obj["$ref"], str):
+            ref_str = obj["$ref"]
+            path_tuple = resolve_ref_path(ref_str)
+            if path_tuple is None:
+                return obj
+            # Prevent infinite recursion on circular refs
+            if ref_str in visited:
+                return {"type": "object", "description": f"(circular ref: {ref_str})"}
+            visited = visited | {ref_str}
+            resolved = get_nested(spec, path_tuple)
+            if resolved is None:
+                return obj
+            # Deep copy and recurse into the resolved object
+            import copy
+            resolved = copy.deepcopy(resolved)
+            return inline_refs(resolved, spec, visited)
+        else:
+            return OrderedDict(
+                (k, inline_refs(v, spec, visited)) for k, v in obj.items()
+            )
+    elif isinstance(obj, list):
+        return [inline_refs(item, spec, visited) for item in obj]
+    return obj
+
+
 def slugify(path, method):
     """Create a filename-safe slug from a path and method."""
     # /repos/{owner}/{repo}/actions/runs/{run_id} -> repos-owner-repo-actions-runs-run_id
@@ -102,34 +136,20 @@ def slugify(path, method):
 
 
 def build_single_op_spec(spec, path_key, path_val, method, op, output_dir):
-    """Build a standalone single-path spec for one operation."""
+    """Build a standalone single-path spec for one operation.
+
+    All $ref pointers are inlined so the output is completely
+    self-contained with no components section needed.
+    """
     # Build the path entry with just this method
     path_entry = OrderedDict()
     if "parameters" in path_val:
         path_entry["parameters"] = path_val["parameters"]
     path_entry[method] = op
 
-    # Collect and resolve refs
-    refs = collect_refs(path_entry)
-    all_ref_paths = collect_all_refs_deep(spec, refs)
-
-    # Build components
-    components = OrderedDict()
-    for ref_path in sorted(all_ref_paths):
-        if len(ref_path) < 2 or ref_path[0] != "components":
-            continue
-        section = ref_path[1]
-        name = "/".join(ref_path[2:])
-        if section not in components:
-            components[section] = OrderedDict()
-        obj = get_nested(spec, ref_path)
-        if obj is not None:
-            components[section][name] = obj
-
     # Get operation summary for the title
     summary = op.get("summary", f"{method.upper()} {path_key}")
     op_tags = op.get("tags", [])
-    tag_str = op_tags[0] if op_tags else "github"
 
     # Assemble
     output = OrderedDict()
@@ -146,8 +166,8 @@ def build_single_op_spec(spec, path_key, path_val, method, op, output_dir):
     output["paths"] = OrderedDict()
     output["paths"][path_key] = path_entry
 
-    if components:
-        output["components"] = components
+    # Inline all $ref pointers — no components section needed
+    output = inline_refs(output, spec)
 
     # Write
     slug = slugify(path_key, method)
@@ -209,26 +229,12 @@ def main():
             filepath, summary = build_single_op_spec(
                 spec, path_key, path_val, first_method, path_val[first_method], args.output_dir
             )
-            # Rewrite with all methods
+            # Rewrite with all methods, inline refs
             with open(filepath, "r") as f:
                 single = yaml.load(f.read(), Loader=yaml.SafeLoader)
             single["paths"][path_key] = dict(path_methods)
-            # Re-resolve refs for all methods
-            refs = collect_refs(path_methods)
-            all_ref_paths = collect_all_refs_deep(spec, refs)
-            components = OrderedDict()
-            for ref_path in sorted(all_ref_paths):
-                if len(ref_path) < 2 or ref_path[0] != "components":
-                    continue
-                section = ref_path[1]
-                name = "/".join(ref_path[2:])
-                if section not in components:
-                    components[section] = OrderedDict()
-                obj = get_nested(spec, ref_path)
-                if obj is not None:
-                    components[section][name] = obj
-            if components:
-                single["components"] = dict(components)
+            single = inline_refs(single, spec)
+            single.pop("components", None)
             with open(filepath, "w", encoding="utf-8") as f:
                 yaml.dump(single, f, default_flow_style=False, allow_unicode=True, sort_keys=False, width=120)
 
