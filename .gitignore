@@ -1,0 +1,13 @@
+# macOS resource forks
+._*
+
+# Large spec files (user-provided input)
+*.yaml
+!custom_spec.yaml
+
+# Python
+__pycache__/
+*.pyc
+
+# Output
+task_menu.md
