@@ -1,14 +1,16 @@
 # GitHub OpenAPI Spec Splitter
 
-Two CLI tools that let you browse a large OpenAPI spec (like GitHub's 100k+ line YAML file), pick the API categories you need, and extract a custom spec containing only those endpoints.
+Three CLI tools that let you browse a large OpenAPI spec (like GitHub's 100k+ line YAML file), pick the API categories you need, extract a custom spec containing only those endpoints, and split it into individual single-path specs for platforms like Glean.
 
 ## Requirements
 
 - Python 3.8+
-- PyYAML (only needed for `build_spec.py`)
+- PyYAML (only needed for `build_spec.py` and `split_spec.py`)
+- openapi-spec-validator (optional, for validation)
 
 ```bash
 pip install pyyaml
+pip install openapi-spec-validator  # optional
 ```
 
 ## Workflow
@@ -36,12 +38,23 @@ pip install pyyaml
 │                     │      │  (small, standalone  │
 │  Full YAML parse,   │      │   OpenAPI spec with  │
 │  filters by tags,   │      │   only your stuff)   │
-│  resolves all $refs │      └─────────────────────┘
-└─────────────────────┘
-     ▲
-     │
-     │  Feed it the SAME original
-     │  spec + your chosen tags
+│  resolves all $refs │      └────────┬────────────┘
+└─────────────────────┘               │
+     ▲                                ▼
+     │                     ┌─────────────────────┐
+     │  Feed it the SAME   │  split_spec.py      │
+     │  original spec +    │                     │
+     │  your chosen tags   │  Splits into one    │
+     │                     │  file per operation  │
+                           └────────┬────────────┘
+                                    │
+                                    ▼
+                           ┌─────────────────────┐
+                           │  actions/            │
+                           │  (189 individual     │
+                           │   single-path specs  │
+                           │   for Glean, etc.)   │
+                           └─────────────────────┘
 ```
 
 ## Step 1 — Generate the Menu
@@ -188,7 +201,58 @@ To regenerate it or customize further:
 python3 build_spec.py api.github.com.yaml \
     -t repos,actions,issues,pulls,git,search,reactions,users \
     --exclude-paths-file exclude_defaults.txt \
+    --strip-examples \
     -o glean-github-spec.yaml
+```
+
+## Step 3 — Split for Glean (One Path Per Spec)
+
+Platforms like Glean require **exactly one path per API spec**. Use `split_spec.py` to break the multi-path spec into individual files:
+
+```bash
+python3 split_spec.py glean-github-spec.yaml -o actions/
+```
+
+This generates 189 individual spec files like:
+
+```
+actions/
+  post-orgs-org-repos.yaml          # Create an organization repository
+  post-repos-owner-repo-issues.yaml # Create an issue
+  put-repos-owner-repo-contents-path.yaml  # Create or update file contents
+  post-repos-owner-repo-pulls.yaml  # Create a pull request
+  ...
+```
+
+Each file is a standalone OpenAPI spec with one path and all its resolved `$ref` components. Upload whichever actions you need.
+
+You can also generate one file per path (all HTTP methods together) instead of one per operation:
+
+```bash
+python3 split_spec.py glean-github-spec.yaml -o actions/ --one-per-path
+```
+
+## Validation
+
+GitHub's original spec has several issues that cause strict validators (like Glean's) to reject it. `build_spec.py` automatically fixes these during generation:
+
+| Issue | What it looks like | Fix applied |
+|-------|-------------------|-------------|
+| **Embedded quotes in examples** | `example: '"2007-10-29T02:42:39Z"'` (extra quotes wrapping the value) | Strips wrapping double quotes from all example strings |
+| **Incomplete response examples** | Example objects missing required fields like `has_discussions` | `--strip-examples` removes response/request body examples entirely |
+| **`additionalProperties: true`** | `additionalProperties: true` on object schemas | Removed (some validators reject it or require `false`) |
+| **`nullable: true`** | `nullable: true` on object schemas | Removed (Glean doesn't support nullable on object schemas) |
+| **Empty object schemas** | `custom_properties: {type: object}` with no properties defined | Removed from parent schema properties and required lists |
+| **Leading whitespace** | Space before `---` document separator | Stripped before parsing |
+
+To validate the output spec yourself:
+
+```bash
+pip install openapi-spec-validator
+python3 -m openapi_spec_validator glean-github-spec.yaml
+
+# Validate individual action specs
+python3 -m openapi_spec_validator actions/post-orgs-org-repos.yaml
 ```
 
 ## Example End-to-End
@@ -197,14 +261,24 @@ python3 build_spec.py api.github.com.yaml \
 # 1. Generate the menu
 python3 extract_tasks.py api.github.com.yaml -o task_menu.md
 
-# 2. Browse it
-cat task_menu.md   # or open in any markdown viewer
+# 2. Browse it, pick your tags
+cat task_menu.md
 
-# 3. Build a spec with just the agent-tasks and gists endpoints
-python3 build_spec.py api.github.com.yaml -t agent-tasks,gists -o agent-and-gists.yaml
+# 3. Build a filtered spec with sanitization for strict validators
+python3 build_spec.py api.github.com.yaml \
+    -t repos,actions,issues,pulls,git,search,reactions,users \
+    --exclude-paths-file exclude_defaults.txt \
+    --strip-examples \
+    -o glean-github-spec.yaml
 
-# 4. Check what you got
-head -20 agent-and-gists.yaml
+# 4. Validate it
+python3 -m openapi_spec_validator glean-github-spec.yaml
+
+# 5. Split into individual actions for Glean
+python3 split_spec.py glean-github-spec.yaml -o actions/
+
+# 6. Upload the ones you need
+cp actions/post-repos-owner-repo-issues.yaml ~/Desktop/
 ```
 
 ## How It Handles Large Files
