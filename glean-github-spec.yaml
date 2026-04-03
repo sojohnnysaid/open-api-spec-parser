@@ -3559,7 +3559,7 @@ paths:
                         if `email` is omitted.
                     date:
                       type: string
-                      example: '"2013-01-05T13:13:22+05:00"'
+                      example: '2013-01-05T13:13:22+05:00'
                   required:
                   - name
                   - email
@@ -3577,7 +3577,7 @@ paths:
                         if `email` is omitted.
                     date:
                       type: string
-                      example: '"2013-01-15T17:13:22+05:00"'
+                      example: '2013-01-15T17:13:22+05:00'
                   required:
                   - name
                   - email
@@ -8782,7 +8782,7 @@ paths:
                   description: The message for the pull request review dismissal
                 event:
                   type: string
-                  example: '"DISMISS"'
+                  example: DISMISS
                   enum:
                   - DISMISS
               required:
@@ -9179,7 +9179,7 @@ paths:
                   description: An alternate short description of the asset. Used in place of the filename.
                 state:
                   type: string
-                  example: '"uploaded"'
+                  example: uploaded
             examples:
               default:
                 value:
@@ -19419,10 +19419,10 @@ components:
               type: boolean
         name:
           type: string
-          example: '"branch/with/protection"'
+          example: branch/with/protection
         protection_url:
           type: string
-          example: '"https://api.github.com/repos/owner-79e94e2d36b3fd06a32bb213/AAA_Public_Repo/branches/branch/with/protection/protection"'
+          example: https://api.github.com/repos/owner-79e94e2d36b3fd06a32bb213/AAA_Public_Repo/branches/branch/with/protection/protection
         required_signatures:
           type: object
           properties:
@@ -19556,34 +19556,34 @@ components:
                     type: string
                   gravatar_id:
                     type: string
-                    example: '""'
+                    example: ''
                   html_url:
                     type: string
-                    example: '"https://github.com/testorg-ea8ec76d71c3af4b"'
+                    example: https://github.com/testorg-ea8ec76d71c3af4b
                   followers_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/followers"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/followers
                   following_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/following{/other_user}"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/following{/other_user}
                   gists_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/gists{/gist_id}"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/gists{/gist_id}
                   starred_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/starred{/owner}{/repo}"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/starred{/owner}{/repo}
                   subscriptions_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/subscriptions"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/subscriptions
                   organizations_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/orgs"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/orgs
                   received_events_url:
                     type: string
-                    example: '"https://api.github.com/users/testorg-ea8ec76d71c3af4b/received_events"'
+                    example: https://api.github.com/users/testorg-ea8ec76d71c3af4b/received_events
                   type:
                     type: string
-                    example: '"Organization"'
+                    example: Organization
                   site_admin:
                     type: boolean
                     example: false
@@ -19679,7 +19679,7 @@ components:
           format: uri
         pattern:
           type: string
-          example: '"mas*"'
+          example: mas*
         required_approving_review_count:
           type: integer
           example: 1
@@ -20441,10 +20441,10 @@ components:
           - self
         target:
           type: string
-          example: '"actual/actual.md"'
+          example: actual/actual.md
         submodule_git_url:
           type: string
-          example: '"git://example.com/defunkt/dotjs.git"'
+          example: git://example.com/defunkt/dotjs.git
       required:
       - _links
       - git_url
@@ -21797,7 +21797,7 @@ components:
           example: MDExOkludGVncmF0aW9uMQ==
         client_id:
           type: string
-          example: '"Iv1.25b5d1e65ffc4022"'
+          example: Iv1.25b5d1e65ffc4022
         owner:
           oneOf:
           - $ref: '#/components/schemas/simple-user'
@@ -22766,7 +22766,7 @@ components:
           $ref: '#/components/schemas/nullable-integration'
         lock_reason:
           type: string
-          example: '"off-topic"'
+          example: off-topic
           nullable: true
       required:
       - lock_reason
@@ -23330,14 +23330,14 @@ components:
       properties:
         name:
           type: string
-          example: '"Chris Wanstrath"'
+          example: Chris Wanstrath
         email:
           type: string
-          example: '"chris@ozmm.org"'
+          example: chris@ozmm.org
         date:
           type: string
           format: date-time
-          example: '"2007-10-29T02:42:39.000-07:00"'
+          example: '2007-10-29T02:42:39.000-07:00'
       nullable: true
     nullable-integration:
       title: GitHub app
@@ -23360,7 +23360,7 @@ components:
           example: MDExOkludGVncmF0aW9uMQ==
         client_id:
           type: string
-          example: '"Iv1.25b5d1e65ffc4022"'
+          example: Iv1.25b5d1e65ffc4022
         owner:
           oneOf:
           - $ref: '#/components/schemas/simple-user'
@@ -24016,7 +24016,7 @@ components:
           type: integer
         starred_at:
           type: string
-          example: '"2020-07-09T00:17:42Z"'
+          example: '2020-07-09T00:17:42Z'
         anonymous_access_enabled:
           type: boolean
           description: Whether anonymous git access is enabled for this repository
@@ -24241,7 +24241,7 @@ components:
           type: boolean
         starred_at:
           type: string
-          example: '"2020-07-09T00:17:55Z"'
+          example: '2020-07-09T00:17:55Z'
         user_view_type:
           type: string
           example: public
@@ -24595,13 +24595,13 @@ components:
                 $ref: '#/components/schemas/integration'
             url:
               type: string
-              example: '"https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions"'
+              example: https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions
             users_url:
               type: string
-              example: '"https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions/users"'
+              example: https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions/users
             teams_url:
               type: string
-              example: '"https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions/teams"'
+              example: https://api.github.com/repos/the-org/an-org-repo/branches/master/protection/dismissal_restrictions/teams
         bypass_pull_request_allowances:
           type: object
           description: Allow specific users, teams, or apps to bypass pull request requirements.
@@ -25442,10 +25442,10 @@ components:
           $ref: '#/components/schemas/reaction-rollup'
         body_html:
           type: string
-          example: '"<p>comment body</p>"'
+          example: <p>comment body</p>
         body_text:
           type: string
-          example: '"comment body"'
+          example: comment body
       required:
       - url
       - id
@@ -26781,7 +26781,7 @@ components:
           type: integer
         starred_at:
           type: string
-          example: '"2020-07-09T00:17:42Z"'
+          example: '2020-07-09T00:17:42Z'
         anonymous_access_enabled:
           type: boolean
           description: Whether anonymous git access is enabled for this repository
@@ -27541,7 +27541,7 @@ components:
           type: boolean
         starred_at:
           type: string
-          example: '"2020-07-09T00:17:55Z"'
+          example: '2020-07-09T00:17:55Z'
         user_view_type:
           type: string
           example: public

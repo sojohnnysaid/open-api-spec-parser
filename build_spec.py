@@ -55,12 +55,13 @@ def chunked_yaml_parse(filepath: str):
     """
     print(f"  Loading spec (this may take a moment for large files)...")
     with open(filepath, "r", encoding="utf-8") as f:
-        # Try C loader for speed
-        try:
-            spec = yaml.load(f, Loader=yaml.CSafeLoader)
-        except AttributeError:
-            f.seek(0)
-            spec = yaml.load(f, Loader=yaml.SafeLoader)
+        content = f.read()
+    # Some specs have leading whitespace before '---' which breaks parsers
+    content = content.lstrip()
+    try:
+        spec = yaml.load(content, Loader=yaml.CSafeLoader)
+    except (AttributeError, yaml.YAMLError):
+        spec = yaml.load(content, Loader=yaml.SafeLoader)
     return spec
 
 
@@ -268,7 +269,31 @@ def build_custom_spec(spec, selected_tags, exclude_patterns=None, include_patter
     if components:
         output["components"] = components
 
+    # ── Sanitize example values ──
+    # GitHub's spec has many example values with embedded quotes like
+    # example: '"2007-10-29T02:42:39.000-07:00"' which fail date-time
+    # format validation. Strip the wrapping double quotes.
+    sanitize_examples(output)
+
     return output
+
+
+def sanitize_examples(obj):
+    """Recursively strip embedded double quotes from example values.
+
+    Fixes strings like '"some value"' -> 'some value' which appear
+    throughout GitHub's spec and break format validators.
+    """
+    if isinstance(obj, dict):
+        for key, val in obj.items():
+            if key == "example" and isinstance(val, str):
+                if len(val) >= 2 and val.startswith('"') and val.endswith('"'):
+                    obj[key] = val[1:-1]
+            else:
+                sanitize_examples(val)
+    elif isinstance(obj, list):
+        for item in obj:
+            sanitize_examples(item)
 
 
 def parse_tags(args):
