@@ -262,16 +262,6 @@ paths:
                   additionalProperties: true
               required:
               - name
-            examples:
-              default:
-                value:
-                  name: Hello-World
-                  description: This is your first repository
-                  homepage: https://github.com
-                  private: false
-                  has_issues: true
-                  has_projects: true
-                  has_wiki: true
       responses:
         '201':
           description: Response
@@ -594,16 +584,6 @@ paths:
                   description: Either `true` to require contributors to sign off on web-based commits, or `false` to not require
                     contributors to sign off on web-based commits.
                   default: false
-            examples:
-              default:
-                value:
-                  name: Hello-World
-                  description: This is your first repository
-                  homepage: https://github.com
-                  private: true
-                  has_issues: true
-                  has_projects: true
-                  has_wiki: true
       responses:
         '200':
           description: Response
@@ -897,9 +877,6 @@ paths:
                   type: boolean
                   default: false
                   description: Whether to enable debug logging for the re-run.
-            examples:
-              default:
-                value: null
       responses:
         '201':
           description: Response
@@ -1286,9 +1263,6 @@ paths:
                   type: boolean
                   default: false
                   description: Whether to enable debug logging for the re-run.
-            examples:
-              default:
-                value: null
       responses:
         '201':
           description: Response
@@ -1330,9 +1304,6 @@ paths:
                   type: boolean
                   default: false
                   description: Whether to enable debug logging for the re-run.
-            examples:
-              default:
-                value: null
       responses:
         '201':
           description: Response
@@ -1491,11 +1462,6 @@ paths:
               required:
               - encrypted_value
               - key_id
-            examples:
-              default:
-                value:
-                  encrypted_value: c2VjcmV0
-                  key_id: 012345678912345678
       responses:
         '201':
           description: Response when creating a secret
@@ -1614,11 +1580,6 @@ paths:
               required:
               - name
               - value
-            examples:
-              default:
-                value:
-                  name: USERNAME
-                  value: octocat
       responses:
         '201':
           description: Response
@@ -1693,11 +1654,6 @@ paths:
                 value:
                   type: string
                   description: The value of the variable.
-            examples:
-              default:
-                value:
-                  name: USERNAME
-                  value: octocat
       responses:
         '204':
           description: Response
@@ -1878,13 +1834,6 @@ paths:
                   maxProperties: 25
               required:
               - ref
-            examples:
-              default:
-                value:
-                  ref: topic-branch
-                  inputs:
-                    name: Mona the Octocat
-                    home: San Francisco, CA
       x-github:
         githubCloudOnly: false
         enabledForGitHubApps: true
@@ -2148,10 +2097,6 @@ paths:
                   description: The new name of the branch.
               required:
               - new_name
-            examples:
-              default:
-                value:
-                  new_name: my_renamed_branch
       responses:
         '201':
           description: Response
@@ -2320,11 +2265,6 @@ paths:
                     We accept the following permissions to be set: `pull`, `triage`, `push`, `maintain`, `admin` and you can
                     also specify a custom repository role name, if the owning organization has defined any.'
                   default: push
-            examples:
-              new-invitation-is-created:
-                summary: Add a collaborator with triage permissions
-                value:
-                  permission: triage
       responses:
         '201':
           description: Response when a new invitation is created
@@ -2511,10 +2451,6 @@ paths:
                   description: The contents of the comment
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: Nice change
       responses:
         '200':
           description: Response
@@ -2639,10 +2575,6 @@ paths:
                   - eyes
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: heart
       responses:
         '200':
           description: Reaction exists
@@ -2922,13 +2854,6 @@ paths:
                     on.'
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: Great stuff
-                  path: file1.txt
-                  position: 4
-                  line: 1
       responses:
         '201':
           description: Response
@@ -3290,20 +3215,7 @@ paths:
       requestBody:
         required: false
         content:
-          application/json:
-            examples:
-              response-if-content-is-a-file-github-object:
-                summary: Content is a file using the object media type
-              response-if-content-is-a-directory-github-object:
-                summary: Content is a directory using the object media type
-              response-if-content-is-a-file:
-                summary: Content is a file
-              response-if-content-is-a-directory:
-                summary: Content is a directory
-              response-if-content-is-a-symlink:
-                summary: Content is a symlink
-              response-if-content-is-a-submodule:
-                summary: Content is a submodule
+          application/json: {}
       responses:
         '200':
           description: Response
@@ -3421,24 +3333,6 @@ paths:
               required:
               - message
               - content
-            examples:
-              example-for-creating-a-file:
-                summary: Example for creating a file
-                value:
-                  message: my commit message
-                  committer:
-                    name: Monalisa Octocat
-                    email: octocat@github.com
-                  content: bXkgbmV3IGZpbGUgY29udGVudHM=
-              example-for-updating-a-file:
-                summary: Example for updating a file
-                value:
-                  message: a new commit message
-                  committer:
-                    name: Monalisa Octocat
-                    email: octocat@github.com
-                  content: bXkgdXBkYXRlZCBmaWxlIGNvbnRlbnRz
-                  sha: 95b966ae1c166bd92f8ae7d1c313e738c731dfc3
       responses:
         '200':
           description: Response
@@ -3537,14 +3431,6 @@ paths:
               required:
               - message
               - sha
-            examples:
-              default:
-                value:
-                  message: my commit message
-                  committer:
-                    name: Monalisa Octocat
-                    email: octocat@github.com
-                  sha: 329688480d39049927147c162b9d2deaf885005f
       responses:
         '200':
           description: Response
@@ -3606,13 +3492,6 @@ paths:
                     than 64KB.
                   additionalProperties: true
                   maxProperties: 10
-            examples:
-              default:
-                value:
-                  event_type: on-demand-test
-                  client_payload:
-                    unit: false
-                    integration: true
       responses:
         '204':
           description: Response
@@ -3707,12 +3586,6 @@ paths:
                 default_branch_only:
                   type: boolean
                   description: When forking from an existing repository, fork with only the default branch.
-            examples:
-              default:
-                value:
-                  organization: octocat
-                  name: Hello-World
-                  default_branch_only: true
       responses:
         '202':
           description: Response
@@ -3762,11 +3635,6 @@ paths:
                   default: utf-8
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: Content of the blob
-                  encoding: utf-8
       responses:
         '201':
           description: Response
@@ -3954,34 +3822,6 @@ paths:
               required:
               - message
               - tree
-            examples:
-              default:
-                value:
-                  message: my commit message
-                  author:
-                    name: Mona Octocat
-                    email: octocat@github.com
-                    date: '2008-07-09T16:13:30+12:00'
-                  parents:
-                  - 7d1b31e74ee336d15cbd21741bc88a537ed063a0
-                  tree: 827efc6d56897b048c772eb4087f854f46256132
-                  signature: |
-                    -----BEGIN PGP SIGNATURE-----
-
-                    iQIzBAABAQAdFiEESn/54jMNIrGSE6Tp6cQjvhfv7nAFAlnT71cACgkQ6cQjvhfv
-                    7nCWwA//XVqBKWO0zF+bZl6pggvky3Oc2j1pNFuRWZ29LXpNuD5WUGXGG209B0hI
-                    DkmcGk19ZKUTnEUJV2Xd0R7AW01S/YSub7OYcgBkI7qUE13FVHN5ln1KvH2all2n
-                    2+JCV1HcJLEoTjqIFZSSu/sMdhkLQ9/NsmMAzpf/iIM0nQOyU4YRex9eD1bYj6nA
-                    OQPIDdAuaTQj1gFPHYLzM4zJnCqGdRlg0sOM/zC5apBNzIwlgREatOYQSCfCKV7k
-                    nrU34X8b9BzQaUx48Qa+Dmfn5KQ8dl27RNeWAqlkuWyv3pUauH9UeYW+KyuJeMkU
-                    +NyHgAsWFaCFl23kCHThbLStMZOYEnGagrd0hnm1TPS4GJkV4wfYMwnI4KuSlHKB
-                    jHl3Js9vNzEUQipQJbgCgTiWvRJoK3ENwBTMVkKHaqT4x9U4Jk/XZB6Q8MA09ezJ
-                    3QgiTjTAGcum9E9QiJqMYdWQPWkaBIRRz5cET6HPB48YNXAAUsfmuYsGrnVLYbG+
-                    UpC6I97VybYHTy2O9XSGoaLeMI9CsFn38ycAxxbWagk5mhclNTP5mezIq6wKSwmr
-                    X11FW3n1J23fWZn5HJMBsRnUCgzqzX3871IqLYHqRJ/bpZ4h20RhTyPj5c/z7QXp
-                    eSakNQMfbbMcljkha+ZMuVQX1K9aRlVqbmv3ZMWh+OijLYVU2bc=
-                    =5Io4
-                    -----END PGP SIGNATURE-----
       responses:
         '201':
           description: Response
@@ -4174,11 +4014,6 @@ paths:
               required:
               - ref
               - sha
-            examples:
-              default:
-                value:
-                  ref: refs/heads/featureA
-                  sha: aa218f56b14c9653891f9e74264a383fa43fefbd
       responses:
         '201':
           description: Response
@@ -4232,11 +4067,6 @@ paths:
                   default: false
               required:
               - sha
-            examples:
-              default:
-                value:
-                  sha: aa218f56b14c9653891f9e74264a383fa43fefbd
-                  force: true
       responses:
         '200':
           description: Response
@@ -4369,17 +4199,6 @@ paths:
               - message
               - object
               - type
-            examples:
-              default:
-                value:
-                  tag: v0.0.1
-                  message: initial version
-                  object: c3d0be41ecbe669545ee3e94d31ed9a4bc91ee3c
-                  type: commit
-                  tagger:
-                    name: Monalisa Octocat
-                    email: octocat@github.com
-                    date: '2011-06-17T14:53:35-07:00'
       responses:
         '201':
           description: Response
@@ -4535,15 +4354,6 @@ paths:
                     If not provided, GitHub will create a new Git tree object from only the entries defined in the `tree` parameter. If you create a new commit pointing to such a tree, then all files which were a part of the parent commit's tree and were not defined in the `tree` parameter will be listed as deleted by the new commit.
               required:
               - tree
-            examples:
-              default:
-                value:
-                  base_tree: 9fb037999f264ba9a7fc6274d15fa3ae2ab98312
-                  tree:
-                  - path: file.rb
-                    mode: '100644'
-                    type: blob
-                    sha: 44b4fc6d56897b048c772eb4087f854f46256132
       responses:
         '201':
           description: Response
@@ -4806,16 +4616,6 @@ paths:
                   example: Epic
               required:
               - title
-            examples:
-              default:
-                value:
-                  title: Found a bug
-                  body: I'm having a problem with this.
-                  assignees:
-                  - octocat
-                  milestone: 1
-                  labels:
-                  - bug
       responses:
         '201':
           description: Response
@@ -4972,10 +4772,6 @@ paths:
                   description: The contents of the comment.
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: Me too
       responses:
         '200':
           description: Response
@@ -5174,10 +4970,6 @@ paths:
                   - eyes
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: heart
       responses:
         '200':
           description: Reaction exists
@@ -5391,17 +5183,6 @@ paths:
                     type changes are silently dropped.
                   nullable: true
                   example: Epic
-            examples:
-              default:
-                value:
-                  title: Found a bug
-                  body: I'm having a problem with this.
-                  assignees:
-                  - octocat
-                  milestone: 1
-                  state: open
-                  labels:
-                  - bug
       responses:
         '200':
           description: Response
@@ -5453,12 +5234,6 @@ paths:
                     to an issue. Assignees are silently ignored otherwise._'
                   items:
                     type: string
-            examples:
-              default:
-                value:
-                  assignees:
-                  - hubot
-                  - other_user
       responses:
         '201':
           description: Response
@@ -5496,12 +5271,6 @@ paths:
                     assignees from an issue. Assignees are silently ignored otherwise._'
                   items:
                     type: string
-            examples:
-              default:
-                value:
-                  assignees:
-                  - hubot
-                  - other_user
       responses:
         '200':
           description: Response
@@ -5638,10 +5407,6 @@ paths:
                   description: The contents of the comment.
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: Me too
       responses:
         '201':
           description: Response
@@ -5747,12 +5512,6 @@ paths:
                       type: string
                   required:
                   - name
-            examples:
-              default:
-                value:
-                  labels:
-                  - bug
-                  - enhancement
       responses:
         '200':
           description: Response
@@ -5832,12 +5591,6 @@ paths:
                   required:
                   - name
               - type: string
-            examples:
-              default:
-                value:
-                  labels:
-                  - bug
-                  - enhancement
       responses:
         '200':
           description: Response
@@ -5961,11 +5714,6 @@ paths:
                   - too heated
                   - resolved
                   - spam
-            examples:
-              default:
-                summary: Example of locking an issue as off-topic
-                value:
-                  lock_reason: off-topic
       responses:
         '204':
           description: Response
@@ -6096,10 +5844,6 @@ paths:
                   - eyes
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: heart
       responses:
         '200':
           description: Response
@@ -6252,12 +5996,6 @@ paths:
                   description: A short description of the label. Must be 100 characters or fewer.
               required:
               - name
-            examples:
-              default:
-                value:
-                  name: bug
-                  description: Something isn't working
-                  color: f29513
       responses:
         '201':
           description: Response
@@ -6347,12 +6085,6 @@ paths:
                 description:
                   type: string
                   description: A short description of the label. Must be 100 characters or fewer.
-            examples:
-              default:
-                value:
-                  new_name: 'bug :bug:'
-                  description: Small bug fix required
-                  color: b01f26
       responses:
         '200':
           description: Response
@@ -6415,10 +6147,6 @@ paths:
                   description: The name of the branch which should be updated to match upstream.
               required:
               - branch
-            examples:
-              default:
-                value:
-                  branch: main
       responses:
         '200':
           description: The branch has been successfully synced with the upstream repository
@@ -6467,12 +6195,6 @@ paths:
               required:
               - base
               - head
-            examples:
-              default:
-                value:
-                  base: master
-                  head: cool_feature
-                  commit_message: Shipped cool_feature!
       responses:
         '201':
           description: Successful Response (The resulting merge commit)
@@ -6599,13 +6321,6 @@ paths:
                     format: `YYYY-MM-DDTHH:MM:SSZ`.'
               required:
               - title
-            examples:
-              default:
-                value:
-                  title: v1.0
-                  state: open
-                  description: Tracking milestone for version 1.0
-                  due_on: '2012-10-09T23:39:01Z'
       responses:
         '201':
           description: Response
@@ -6693,13 +6408,6 @@ paths:
                   format: date-time
                   description: 'The milestone due date. This is a timestamp in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
                     format: `YYYY-MM-DDTHH:MM:SSZ`.'
-            examples:
-              default:
-                value:
-                  title: v1.0
-                  state: open
-                  description: Tracking milestone for version 1.0
-                  due_on: '2012-10-09T23:39:01Z'
       responses:
         '200':
           description: Response
@@ -6935,13 +6643,6 @@ paths:
               required:
               - head
               - base
-            examples:
-              default:
-                value:
-                  title: Amazing new feature
-                  body: Please pull these awesome changes in!
-                  head: octocat:new-feature
-                  base: master
       responses:
         '201':
           description: Response
@@ -7093,10 +6794,6 @@ paths:
                   description: The text of the reply to the review comment.
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: I like this too!
       responses:
         '200':
           description: Response
@@ -7219,10 +6916,6 @@ paths:
                   - eyes
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: heart
       responses:
         '200':
           description: Reaction exists
@@ -7380,13 +7073,6 @@ paths:
                   type: boolean
                   description: Indicates whether [maintainers can modify](https://docs.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/)
                     the pull request.
-            examples:
-              default:
-                value:
-                  title: new title
-                  body: updated body
-                  state: open
-                  base: master
       responses:
         '200':
           description: Response
@@ -7560,17 +7246,6 @@ paths:
               - body
               - commit_id
               - path
-            examples:
-              example-for-a-multi-line-comment:
-                summary: Example for a multi-line comment
-                value:
-                  body: Great stuff!
-                  commit_id: 6dcb09b5b57875f334f61aebed695e2e4193db5e
-                  path: file1.txt
-                  start_line: 1
-                  start_side: RIGHT
-                  line: 2
-                  side: RIGHT
       responses:
         '201':
           description: Response
@@ -7631,10 +7306,6 @@ paths:
                   description: The text of the review comment.
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: Great stuff!
       responses:
         '201':
           description: Response
@@ -7812,11 +7483,6 @@ paths:
                   - merge
                   - squash
                   - rebase
-            examples:
-              response-if-merge-was-successful:
-                value:
-                  commit_title: Expand enum
-                  commit_message: Add a new value to the merge_method enum
       responses:
         '200':
           description: if merge was successful
@@ -7926,15 +7592,6 @@ paths:
                 - reviewers
               - required:
                 - team_reviewers
-            examples:
-              default:
-                value:
-                  reviewers:
-                  - octocat
-                  - hubot
-                  - other_user
-                  team_reviewers:
-                  - justice-league
       responses:
         '201':
           description: Response
@@ -7984,15 +7641,6 @@ paths:
                     type: string
               required:
               - reviewers
-            examples:
-              default:
-                value:
-                  reviewers:
-                  - octocat
-                  - hubot
-                  - other_user
-                  team_reviewers:
-                  - justice-league
       responses:
         '200':
           description: Response
@@ -8139,16 +7787,6 @@ paths:
                     required:
                     - path
                     - body
-            examples:
-              default:
-                value:
-                  commit_id: ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091
-                  body: This is close to perfect! Please address the suggested inline change.
-                  event: REQUEST_CHANGES
-                  comments:
-                  - path: file.md
-                    position: 6
-                    body: Please add more information here, and fix this typo.
       responses:
         '200':
           description: Response
@@ -8237,10 +7875,6 @@ paths:
                   description: The body text of the pull request review.
               required:
               - body
-            examples:
-              default:
-                value:
-                  body: This is close to perfect! Please address the suggested inline change. And add more about this.
       responses:
         '200':
           description: Response
@@ -8380,11 +8014,6 @@ paths:
                   - DISMISS
               required:
               - message
-            examples:
-              default:
-                value:
-                  message: You are dismissed
-                  event: DISMISS
       responses:
         '200':
           description: Response
@@ -8431,10 +8060,6 @@ paths:
                     request''s branch. If the expected SHA does not match the pull request''s HEAD, you will receive a `422
                     Unprocessable Entity` status. You can use the "[List commits](https://docs.github.com/rest/commits/commits#list-commits)"
                     endpoint to find the most recent commit SHA. Default: SHA of the pull request''s current HEAD ref.'
-            examples:
-              default:
-                value:
-                  expected_head_sha: 6dcb09b5b57875f334f61aebed695e2e4193db5e
       responses:
         '202':
           description: Response
@@ -8651,16 +8276,6 @@ paths:
                   default: 'true'
               required:
               - tag_name
-            examples:
-              default:
-                value:
-                  tag_name: v1.0.0
-                  target_commitish: master
-                  name: v1.0.0
-                  body: Description of the release
-                  draft: false
-                  prerelease: false
-                  generate_release_notes: false
       responses:
         '201':
           description: Response
@@ -8750,11 +8365,6 @@ paths:
                 state:
                   type: string
                   example: uploaded
-            examples:
-              default:
-                value:
-                  name: foo-1.0.0-osx.zip
-                  label: Mac binary
       responses:
         '200':
           description: Response
@@ -8831,13 +8441,6 @@ paths:
                     or '.github/release.yaml' will be used. If that is not present, the default configuration will be used.
               required:
               - tag_name
-            examples:
-              default:
-                value:
-                  tag_name: v1.0.0
-                  target_commitish: main
-                  previous_tag_name: v0.9.2
-                  configuration_file_path: .github/custom_release_config.yml
       responses:
         '200':
           description: Name and body of generated release notes
@@ -9005,15 +8608,6 @@ paths:
                     The value must be a category that already exists in the repository. If there is already a discussion linked
                     to the release, this parameter is ignored. For more information, see "[Managing categories for discussions
                     in your repository](https://docs.github.com/discussions/managing-discussions-for-your-community/managing-categories-for-discussions-in-your-repository)."
-            examples:
-              default:
-                value:
-                  tag_name: v1.0.0
-                  target_commitish: master
-                  name: v1.0.0
-                  body: Description of the release
-                  draft: false
-                  prerelease: false
       responses:
         '200':
           description: Response
@@ -9138,9 +8732,6 @@ paths:
               type: string
               format: binary
               description: The raw file data
-            examples:
-              default:
-                value: '@example.zip'
       responses:
         '201':
           description: Response for successful upload
@@ -9238,10 +8829,6 @@ paths:
                   - eyes
               required:
               - content
-            examples:
-              default:
-                value:
-                  content: heart
       responses:
         '200':
           description: Reaction exists
@@ -9375,14 +8962,6 @@ paths:
                   default: false
               required:
               - name
-            examples:
-              default:
-                value:
-                  owner: octocat
-                  name: Hello-World
-                  description: This is your first repository
-                  include_all_branches: false
-                  private: false
       responses:
         '201':
           description: Response
@@ -10043,12 +9622,6 @@ paths:
                 bio:
                   description: The new short biography of the user.
                   type: string
-            examples:
-              default:
-                summary: Example of updating blog and name
-                value:
-                  blog: https://github.com/blog
-                  name: monalisa octocat
       responses:
         '200':
           description: Response

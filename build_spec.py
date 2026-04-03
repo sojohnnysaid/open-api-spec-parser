@@ -304,18 +304,17 @@ def sanitize_examples(obj):
 
 
 def strip_response_examples(spec):
-    """Remove response-level examples that bloat the spec and often have
-    missing required fields.
+    """Remove operation-level examples that bloat the spec and often have
+    missing required fields or null values that fail validation.
 
     Removes:
-    - 'examples' keys from response media type objects (the big JSON blobs)
+    - 'examples' and 'example' keys from response media type objects
+    - 'examples' and 'example' keys from request body media type objects
     - The entire components/examples section
-    - 'example' keys from response media type objects (single example blobs)
 
     Preserves:
     - Per-property 'example' values in schemas (e.g. example: true)
     """
-    # Strip from paths -> responses -> content -> examples
     for path_val in spec.get("paths", {}).values():
         if not isinstance(path_val, dict):
             continue
@@ -323,10 +322,18 @@ def strip_response_examples(spec):
             op = path_val.get(method)
             if not isinstance(op, dict):
                 continue
+            # Strip from responses
             for resp_val in op.get("responses", {}).values():
                 if not isinstance(resp_val, dict):
                     continue
                 for media in resp_val.get("content", {}).values():
+                    if isinstance(media, dict):
+                        media.pop("examples", None)
+                        media.pop("example", None)
+            # Strip from request bodies
+            req_body = op.get("requestBody")
+            if isinstance(req_body, dict):
+                for media in req_body.get("content", {}).values():
                     if isinstance(media, dict):
                         media.pop("examples", None)
                         media.pop("example", None)
